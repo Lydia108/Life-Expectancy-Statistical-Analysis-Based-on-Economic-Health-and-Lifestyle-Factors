@@ -1,0 +1,1161 @@
+---
+title: Life Expectancy Statistical Analysis Based on Economic, Health, and Lifestyle
+  Factors
+author: "Group L03-22: Jemima Balbastro, Lydia Chien, Janice Zhang, Simran Arora"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+```{r, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+
+```
+ 
+
+# 1. Introduction
+
+## 1.1 Motivation
+
+### 1.1.1 Context
+
+The research topic for this project is to understand how economic,
+health, and lifestyle factors affects life expectancy. The group has
+identified a Life Expectancy data set on Kaggle, which contains
+aggregated data from multiple sources including the World Health
+Organization, World Bank, and Our World in Data. This data set covers
+179 countries from 2000 to 2015 and includes 19 variables representing
+various factors such as economic conditions, education levels,
+immunization statistics, lifestyle habits, and mortality rates.
+
+Life expectancy varies by country due to a combination of these
+factors.By examining life expectancy in different countries, researchers
+can gain valuable insights into the role each factor plays in
+influencing life expectancy trends. This topic is critical, as life
+expectancy serves as a significant indicator of societal well-being and
+can inform policies aimed at fostering healthier, more equitable
+societies.
+
+### 1.1.2 Problem
+
+The primary problem this project seeks to address is identifying which
+factors have the strongest relationship with life expectancy using
+multiple linear regression modeling. Specifically, we aim to explore how
+various socio-economic and health-related variables influence life
+expectancy. By leveraging techniques such as individual t-tests,
+additive modeling, automated model selection, and and interaction
+modeling within a multivariable regression framework, we will determine
+the key predictors of life expectancy and the statistical significance
+of its impact. This analysis will provide insights into life expectancy
+trends and inform strategic policy decisions aimed at improving societal
+well-being.
+
+### 1.1.3 Challenges
+
+This problem is challenging due to the complexity and size of the
+dataset. With 179 countries and 19 variables spanning multiple years ,
+the dataset is large and contains many inter-related factors. Managing
+this volume of data requires careful processing to handle missing
+values, with potential multicollinearity among variables, and outliers
+that could effect the results. Additionally, the relationships between
+predictors and life expectancy may not be linear or independent, which
+require advanced modeling techniques to capture interactions and
+non-linear trends accurately. These factors make it difficult to build
+an interpretable and accurate model that reliably predicts life
+expectancy while accounting for these nuances. Another challenge is that the model contains too many significant predictors. Due to this issue, there are 11 x 11 interaction terms, making it difficult for the team to continue the analysis manually. This has led us to reduce the number of predictors in the additive model and focus only on the predictors that are of interest for further analysis. 
+
+## 1.2 Objective
+
+### 1.2.1 Overview
+The intent of this project is to make use of multiple linear regression model to gather insights into which variables relating to  economic, health, and lifestyle factors affect life expectancy. As part of this analysis we check for all six regression assumptions such as Linearity, Multicollinearity and Normality assumptions to test the validity of our data. To find the model that best explains our response variable life expectancy we utilize additive, interaction and higher order models to select the final model for analysis.
+
+### 1.2.2 Goals & Research Questions
+
+The goal of this project is to identify which variables have the
+strongest relationship with life expectancy using multiple linear
+regression modeling, and provide the best model in predicting life
+expectancy. Understanding the impact of each variable can help forecast
+life expectancy trends for specific countries and inform strategic
+policy decisions. For example, if GDP or education levels impact life
+expectancy significantly, governments can provide make professional
+training and schooling more accessible for its workforce and boost its
+countries' productivity. Through this project, the group aims to share
+findings that deepen our understanding of which variables significantly
+impact life expectancy and to what degree. We will also determine what
+interactions, if any, affect life expectancy.
+
+We will be considering three research questions to help us analyze our data:
+
+1. Which factors effect life expectancy?
+
+2. How can we interpret the betas of our final model to assess how these factors affect life expectancy?
+
+3. Does there exist any interaction between these variables?
+
+We will be creating various visualization such as residual and box plots to conduct regression assumption tests and to perform higher order analysis.
+
+# 2. Methodology
+
+## 2.1 Data
+
+The data set "Life Expectancy" that we will be using in this research
+study is a publicly available data set from Kaggle, a website that
+publicly shares open data for analytical purposes among the data science
+community. In total, it has 19 variables (aside from our response variable, Life_expectancy) relating to factors such as
+health, economy and mortality of 179 countries across the years of 2000
+to 2015. The source of the data set can be found
+here:<https://www.kaggle.com/datasets/lashagoch/life-expectancy-who-updated>.
+The Life Expectancy data set is an aggregate of public individual data
+sets from the World Health Organization data repository, World Bank Open
+Data, and Our World in Data. There are 2864 rows in the data and each
+row represents statistics collected from a country in a specific year.
+ 
+There are 3 qualitative columns in the data set:
+ 
+1.Country - Identifies the name of the country\
+ 
+2.Region - The region in which a country resides (Region of the country
+(9 categories – Africa, Asia, Central America and Carribean, European
+Union, Middle East, North America, Oceania, Rest of Europe, South
+America).\
+ 
+3.Economy_status_developed - Indicates if the country is developed or
+not. 0 = Developing Country and 1 = Developed Country\
+ 
+There are 16 quantitative columns in the data (aside from the response variable, Life_expectancy):
+ 
+1. Life expectancy - This is the response variable it is quantitative and continuous. It measures the average number of years that a newborn (both genders) can expect to live for a specific year in a given country (from birth).
+ 
+2. Year - Year of which the information in the row corresponds to.
+ 
+3. Infant_deaths - Represents the death of infants that are less than one-year-old per 1000 live births.
+ 
+4. Under_five_deaths - Represents death of children under five per 1000 live births.
+ 
+5. Adult_mortality - Represents the probability of dying between the ages of 15 to 60 years per 1000 population.
+ 
+6. Alcohol_consumption  - Represents the alcohol per capita consumption for the population over the age of 15 years. The unit of measurement is in liters of pure alcohol per person per year.
+ 
+7. Hepatitis_B - This is the percentage of coverage of Hepatitis B (HepB3) immunization among one-year-old children.
+ 
+8. Measles - This is the percentage of coverage of Measles containing vaccine first dose (MCV1) immunization among one-year-old children.
+ 
+9. BMI - This is the mean body mass index of the adult population calculated using weight and height ($kg/m^2$).
+ 
+10. Polio- This is the percentage of coverage of Polio (Pol3) immunization among one-year-old children.
+ 
+11. Diphtheria - This is the percentage of coverage of Diphtheria tetanus toxoid and pertussis (DTP3) immunization among one-year-old children.
+ 
+12. Incidents_HIV  - This is the number of new HIV infections for populations aged 15-49 per 1000 uninfected population in the year before.
+ 
+13. GDP_per_capita - The GDP per capita of the country for the corresponding year measured in USD.
+ 
+14. Population_mln - The total population of the country in the millions.
+ 
+15. Thinness_ten_nineteen_year - This is based on measured height and weight, measuring the percentage of thinness (with BMI less than 2 standard deviations below the median) among adolescents aged 10-19 years, according to the WHO references for school-age children and adolescents .
+ 
+16. Thinness_five_nine_years - This is based on measured height and weight, measuring the percentage of thinness among school-aged children aged 5-9 years.
+ 
+17. Schooling - This measures the average years that individuals over the age of 25 years spent in formal education in each country in each year. Typical duration required to complete primary education usually takes about 6 years, secondary education 4-6 years, and higher education even longer.
+
+## 2.2 Approach
+
+### 2.2.1 Assumption Testing
+Before proceeding with multiple linear regression analysis, we will first validate the dataset by conducting a series of assumption tests. These tests will ensure the appropriateness of our modeling approach and will be discussed in detail in the Workflow section below. To evaluate the assumptions of linear regression, we will employ various data visualizations, including:
+
+- Residuals vs. Fitted plots: To check for linearity and homoscedasticity.
+- Residuals vs. Spatial Variable plots: To identify potential patterns associated with spatial variables.
+- Scale-Location plots: To assess the constancy of variance.
+- Q-Q plots: To evaluate the normality of residuals.
+- Histograms of residuals: To further confirm normality assumptions.
+
+Understanding the behavior of residual errors is critical, as the results of these tests directly influence the reliability of our interpretations and subsequent analyses.
+
+### 2.2.2 Model Development
+The primary objective of this study is to identify the most optimal predictive model for the response variable, Life_expectancy. We will approach this goal using the following steps:
+
+1. Additive Model Creation
+
+We will build an additive linear regression model, including statistically significant predictors at a significance level of $\alpha = 0.05$.
+Model comparison will involve Full and Partial-F tests, with p-values guiding the inclusion or exclusion of predictors.
+Individual t-tests will be used to determine the statistical significance of each predictor.
+
+2. Automated Model Selection
+
+We will apply Stepwise Regression, Forward Selection, and Backward Elimination techniques to identify optimal models.
+Adjusted R-squared will serve as the criterion for comparing the models produced by these methods against the manually created additive model.
+
+3. Exploring Interaction and Higher-Order Terms
+
+To enhance the model further, we will evaluate the inclusion of interaction terms and polynomial (higher-order) terms.
+Models incorporating these terms will also be assessed using Adjusted R-squared to determine their predictive performance.
+
+### 2.2.3 Reporting and Interpretation
+
+Throughout this process, the output of each multiple linear regression model will be thoroughly analyzed. Key metrics, including p-values, Adjusted R-squared, and residual errors, will be reported. The significance of predictors and models will be assessed relative to the established $\alpha = 0.05$ threshold, ensuring transparency.
+
+By systematically refining our model through these steps, we aim to derive a robust and best-fitting model that provides meaningful insights into the factors driving variations in life expectancy.
+
+## 2.3 Workflow
+
+1. Introduction\
+The workflow tasks starts with an introduction of the project and the
+dataset to provide the background of the study. We use multiple linear
+regression modelling for the project.
+
+2. Assumptions\
+Build the full model and do the assumption tests first to confirm the validity of the dataset, if any of
+the test does not work out, explain the reasons and decide if we can
+proceed to the next steps.
+
+- Linearity Assumption
+- Independence Assumption
+- Equal Variance Assumption
+- Normality Assumption
+- Multicollinearity
+- Outliers
+
+The assumption tests are hard as we tried to pass each single test, for example, in the Equal Variance Assumpition test, we tried to improve the test by transforming the model into log and Box-Cox but they
+still did not improve. Fortunately, we figured out the reason behind and
+explain why we stay with the original model. The full model is still
+valid for the other steps.
+
+3. Additive Model\
+- Full model test (hypothesis, ANOVA, interpretation, full model equation) to test the revised full model
+- Partial model test (individual t-test, hypothesis, interpretation, equation) for the reduced model
+- Partial F-test using ANOVA to see if the reduced model is better
+- Comparison table for the full and reduced addictive model
+
+4. Model Selection Procedures\
+- Stepwise/Forward/Backward Regression Procedure
+- Comparison of t-test/Stepwise/Forward/Backward
+
+5. Interaction model
+- Partial test
+
+6. Higher order analysis (for each variable in the reduced interaction model)
+- Limit to quatric terms to reduce over fitting 
+
+7. Final model (interpretation and equation)\
+- Use Adjusted R-squared as the preferred criterion to decide the best model, as it adjusts for the number of predictors and helps reduce overfitting.\
+
+8. Conclusion
+
+## 2.4 Contributions
+
+The group has distributed the workload among our four teammates. Since
+we only have four members in the group, we assigned two members to complete tasks relating to
+the first half of the project, including six assumption tests and the additive model. The other two members will focus on tasks relating to the interaction model and higher order analysis. However, we will go through all the code and interpretations as a group to ensure expectations are being met and to move on to the next steps. The division of work and roles of the group members are
+agreed by all teammates. 
+
+The significance level we agreed on is 0.05 when conducting tests such as partial F-Test or individual T-test. 
+
+The specific contributions are as follows:
+
+Lydia and Janice were responsible for the first half of the project for
+accuracy and the quality of the model. They have contributed to the introduction of
+the project and the background of the datasets. They checked the assumption tests to ensure the validity of the
+dataset, followed by building the full additive model.
+They analyzed the p-value, following the steps
+provided in class to reduce the model till all variables are
+significant. The procedure should include all elements mentioned in
+class, such as stating the hypothesis, testing the p-value and other
+test statistics, full model test, partial t-test, adjusted R-squared, residual standard error and interpretation of the model. We will do the additive model and reduced model as a group to make sure we are all good to move on to the second half of the project.
+
+Then Jemima and Simran have conducted the interaction model analysis, along with the
+higher order analysis, to further examine the relationships between
+variables and how they react to the response variable. Like the additive approach, they stated the hypothesis, provide the p-value of the model, the Adjusted R-squared, and the
+Residual Standard Error. We will reduce the interaction model further if
+needed depending on the p-values of the interactions, and then conduct
+an F-test to determine if the reduced interaction model is better than
+the full interaction model.
+
+Next, we will conduct a higher order analysis to see if any non-linear
+relationships exist that could affect our response variable. Using the
+GGally library, we will observe the curvature of the relationship
+between Life Expectancy and each independent variable, barring
+categorical variables. If there is a curvature, we will use a quadratic
+model so that we can have a meaningful interpretation of the variable.
+We will continue the higher order analysis until we find the model with
+the highest possible Adjusted R-squared value.
+
+Once we have analyzed our additive, interaction, and quadratic models,
+our project group will compare the Adjusted R-squared and the Residual
+Standard Errors between all models to determine which is the best model.
+We will provide the final model equation and interpret it in the context
+of life expectancy. Our conclusion will include which variables and
+interactions are the most significant when predicting life expectancy
+based on economic, lifestyle, and health factors. 
+
+
+
+# 3. Main Results of the Analysis
+
+## 3.1 Preparation
+
+
+We will start with accessing the necessary packages for the multiple
+linear regression analysis.
+
+```{r echo=FALSE}
+library(ggplot2)
+library(olsrr)
+library(car)
+library(lmtest)
+library(mctest)
+library(car)
+library(MASS)
+```
+
+Table 1: The first 6 rows of the Life Expectancy data set.
+
+```{r}
+## import the life_expectancy data set
+Life_Expectancy_data <- read.csv("Life-Expectancy-Data-Updated.csv",header = TRUE)
+head(Life_Expectancy_data)
+```
+
+In the Life_Expectancy data set, we identified duplicate columns:
+Economy_status_Developed and Economy_status_Developing. Both columns
+represent the same information about a country's economic status
+(developed or developing). To ensure the accuracy of our analysis, we
+decided to drop the Economy_status_Developing column. Additionally,
+after removing this column, a new column labeled "Residual" appeared in
+the data set. To maintain the completeness and integrity of the data, we
+also decided to drop the "Residual" column.
+
+Table 2: Life Expectancy data set exlcuding the column
+"Economy_status_developing" as it is a duplicate column.
+
+```{r}
+Life_Expectancy_data <- Life_Expectancy_data[ , !(names(Life_Expectancy_data) %in% "Economy_status_Developing")]
+Life_Expectancy_data <- Life_Expectancy_data[ , !(names(Life_Expectancy_data) %in% "residuals")]
+head(Life_Expectancy_data)
+```
+
+## 3.2 Assumptions
+
+Statistical tests and models rely heavily on the assumptions of the
+underlying data. To ensure the reliability and trustworthiness of our
+project's results, we conducted an assumption analysis, which includes
+the following checks:
+
+1.  Linearity Assumption\
+2.  Independence Assumption\
+3.  Equal Variance Assumption\
+4.  Normality Assumption\
+5.  Multicollinearity\
+6.  Outliers\
+
+The initial step involves setting up the full life expectancy model with
+all variables, using Life_expectancy as the response variable. Given the
+size and complexity of our data set, the output is considerably long.
+Our data set includes qualitative variables such as Country, Region, and
+Life_Expectancy_data. Notably, the Country variable encompasses 179
+unique categories, while Region contains 9 distinct categories. These
+categorical variables add complexity to the analysis, requiring careful
+treatment during assumption testing and model development to ensure
+accurate and meaningful results.
+
+```{r}
+Life_Expectancy_data$Economy_status_Developed[which(Life_Expectancy_data$Economy_status_Developed==1)] = "Developed"
+Life_Expectancy_data$Economy_status_Developed[which(Life_Expectancy_data$Economy_status_Developed==0)] = "Developing"
+
+LifeExpectancyFull_old = lm(Life_expectancy ~ factor(Country) + factor(Region) + Year + Infant_deaths + Under_five_deaths + Adult_mortality + Alcohol_consumption +	Hepatitis_B	+ Measles	+ BMI	+ Polio	+ Diphtheria + Incidents_HIV + GDP_per_capita + Population_mln + Thinness_ten_nineteen_years + 	Thinness_five_nine_years + Schooling + factor(Economy_status_Developed), data = Life_Expectancy_data)
+
+# Since the default setting only output limited number of rows, we expanded the max print rows to 10000
+options(max.print = 10000)
+summary(LifeExpectancyFull_old)
+```
+
+In the output of the full model, the coefficient for
+Economy_status_Developed is missing (NA). This suggests potential
+multicollinearity among the variables Country, Region, and
+Economy_status_Developed. To investigate this, we plan to assess
+multicollinearity using the Variance Inflation Factor (VIF). However,
+before proceeding with this analysis, it is essential to verify that the
+model meets other fundamental assumptions.
+
+### 3.2.1 Linearity Assumption
+
+The linear regression model assumes a linear relationship between the
+predictor variables and the response variable. To ensure that our model
+adheres to this linearity assumption, we will perform appropriate
+diagnostic checks, such as analyzing residual plots to verify that the
+residuals are randomly distributed without any discernible patterns.
+This step is crucial for confirming the validity of the linear
+relationship and ensuring the reliability of our model's predictions.
+
+Figure 1: Fitted vs. Residual Plot to determine Linearity in the data
+set
+
+```{r}
+library(ggplot2)
+ggplot(LifeExpectancyFull_old, aes(x=.fitted, y=.resid)) +
+  geom_point() +geom_smooth()+
+  geom_hline(yintercept = 0)
+```
+
+The points are mostly scattered randomly around the horizontal line,
+indicating that the residuals are centered around zero. The smoothed
+blue line shows a slight curvature, especially in the lower range of the
+fitted values (40–50) and the higher range (70–80).
+
+Overall, there are some minor non-linear relationship between the
+predictors and the response variable. However, most of the value have
+fit in the linear assumption.
+
+We attempted to produce a higher-order graph to further understand where
+curvatures exist, however we could not output the graph as there is a
+large number of categories (179 unique countries). Therefore, since the
+variables closely follows the horizontal line, we will assume that the
+data set adheres to the linearity assumption and move on to analyzing
+the data set for independence of residual errors..
+
+### 3.2.2 Independence Assumption
+
+The independence assumption in linear regression requires that the
+residuals (errors) are independent of each other. Violations of this
+assumption occur when residuals are correlated, which may arise due to
+temporal, spatial, or group-based factors. Ensuring independence is
+critical because correlated residuals can lead to biased estimates and
+invalid inference.
+
+Ways to check for independence:\
+- Residuals vs Time (or observation number)\
+- Residuals vs Spatial variable\
+- Residuals vs Group (prefer blocking)\
+
+Among these checks, we will conduct the Residuals vs Spatial variable analysis and the Residuals vs. Group analysis as these will be the most relevant based on the variables in our data set. 
+
+First, as the data set contains the Region variable that represents geographic region, we will perform the
+Residuals vs Spatial analysis to check for independence:
+
+Figure 2: Box plot of Residual Errors by Region. If the interquartile
+range of the boxplot is centered around 0, we can state that the data
+set adheres to the independence assumption.
+
+```{r}
+# Box plot of Residuals by Region
+Life_Expectancy_data$residuals <- residuals(LifeExpectancyFull_old)
+ggplot(Life_Expectancy_data, aes(x = Region, y = residuals)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Residuals vs Region", x = "Region", y = "Residuals") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+```
+
+The box plots show slight variation in the central tendency and spread
+of residuals across regions. Some regions, like "European Union" and
+"North America," appear to have tighter distributions. However, there
+are no extreme or systematic deviations. Therefore, the independence
+assumption across regions is mostly satisfied. There might be minor
+regional effects influencing the residuals, but they are not severe.
+
+As the data set contains the country variable, we will perform another
+Residuals vs Spatial variable to check for independence:
+
+Figure 3: Box plot of Residuals vs. Country
+```{r echo=FALSE}
+# Box plot of Residuals by Country
+ggplot(Life_Expectancy_data, aes(x = Country, y = residuals)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Residuals vs Country", x = "Country", y = "Residuals") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+```
+
+The plot shows residuals distributed around 0 for most countries, but
+some countries have larger variances. The overall pattern does not
+suggest a strong violation of independence. Therefore, the
+independence assumption with respect to Country is satisfied, but
+certain countries might be outliers or have unique characteristics not
+well-captured by the model.
+
+As the data set contains a group variable, we do the Residuals vs group
+(prefer blocking) to check for independence:
+
+Figure 4: Box plot of Residuals by Economy Status. This is a group variable as there are two possible outcomes with this variable: 0 - Developing Country, and 1 - Developed Country.
+```{r}
+# Boxplot of Residuals by Economy Status (Developed vs Developing)
+ggplot(Life_Expectancy_data, aes(x = factor(Economy_status_Developed), y = residuals)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(
+    title = "Residuals vs Economy Status",
+    x = "Economy Status (0 = Developing, 1 = Developed)",
+    y = "Residuals"
+  )
+```
+
+The boxplots show similar central tendencies around 0 for both groups
+and the spread of residuals for developing countries is slightly larger
+than for developed countries. There are a few outliers in both groups,
+but no systematic pattern. **Therefore, the independence assumption for
+Economy_status_Developed is satisfied. The model does not show
+significant bias between the two groups.**
+
+In conclusion, **the residuals for Region, Country and
+Economy_status_Developed do not show strong evidence of dependence or
+systematic bias.** Although there are some outliers and minor variations
+in spread might warrant further investigation, but these are not severe
+enough to invalidate the model.
+
+### 3.2.3 Equal Variance Assumption
+
+The Equal Variance Assumption, also known as homoscedasticity, is a key
+assumption in multiple linear regression. It states that the variance of the
+residuals should be constant across all levels of the fitted values.
+This means that the spread of the residuals should not systematically
+increase or decrease as the predicted values change.
+
+Figure 5: Residuals vs Fitted plot for Homoscedasticity
+```{r echo=FALSE}
+library(ggplot2)
+ggplot(LifeExpectancyFull_old, aes(x=.fitted, y=.resid)) +
+  geom_point(colour = "purple") +
+  geom_hline(yintercept = 0) +
+  geom_smooth(colour = "green4")+
+  ggtitle("Residual plot: Residual vs Fitted values")
+```
+
+The residuals are scattered around the horizontal line, but the spread
+of the residuals appears to increase slightly as the fitted values
+increase. This slight pattern suggests a potential issue with
+homoscedasticity, as the variance of the residuals is not completely
+consistent across all fitted values. Therefore, there might be mild
+heteroscedasticity in the data.
+
+We will conduct another Scale-Location plot to verify our findings:
+
+Figure 6: Scale-Location plot for Homoscedasticity
+```{r echo=FALSE}
+#Scale-location plot
+ggplot(LifeExpectancyFull_old, aes(x=.fitted, y=sqrt(abs(.stdresid)))) +
+  geom_point(colour = "black") +
+  geom_hline(yintercept = 0) +
+  geom_smooth( colour = "green4")+
+   ggtitle("Scale-Location plot : Standardized Residual vs Fitted values")
+```
+
+The square root of the absolute standardized residuals decreases
+slightly as the fitted values increase, forming a slight downward trend.
+Again, this trend indicates a potential violation of the equal variance
+assumption. Ideally, the points should be evenly distributed around a
+horizontal line. The observed decreasing pattern
+suggests that residual variability is not constant and decreases with higher fitted values.
+
+We then do the Breusch-Pagan Test to confirm homoscedasticity. First, we will state our hypothesis:
+
+**Hypothesis:**
+
+$H_{0}$: Heteroscedasticity is not present (homoscedasticity); all $\sigma$ are the same
+
+$H_{a}$: heteroscedasticity is present; the $\sigma$ values are not the same.
+
+
+```{r echo=FALSE}
+## Testing for Homoscedasticity
+library(lmtest)
+bptest(LifeExpectancyFull_old)
+```
+
+Here, we reject the null hypothesis as we received a p-value of < 2.2e-16 which is less than the significance level of $\alpha = 0.05$, indicating that heteroscedasticity is present in the model.
+
+To address this issue, we need to transform the model in an attempt to
+adhere to the homoscedasticity assumption. The variable Life_expectancy is transformed using a
+log-transformation. This transformation is applied to address the issue of heteroscedasticity detected in the original model. Then the next step involves determining the best value for the lambda parameter to apply an appropriate transformation.
+
+```{r}
+## testing for homoscedasticity
+LifeExpectancyFull_log <- lm(log(Life_expectancy) ~ factor(Country) + factor(Region) +Year + Infant_deaths + Under_five_deaths + Adult_mortality + Alcohol_consumption + Hepatitis_B + Measles + BMI + Polio + Diphtheria + Incidents_HIV + GDP_per_capita + Population_mln + Thinness_ten_nineteen_years + Thinness_five_nine_years + Schooling + factor(Economy_status_Developed), data = Life_Expectancy_data)
+bptest(LifeExpectancyFull_log)
+```
+
+The test statistic (BP = 1005.6) and a very small p-value (p-value \<
+2.2e-16) indicates that we reject the null hypothesis. This
+confirms that heteroscedasticity is still present even after the log
+transformation.
+
+Then we plot to see the residuals vs fitted of the log model:
+
+Figure 7: Residuals vs. Fitted plot of the Logarithmic Model to test for Homoscedasticity.
+```{r}
+plot(LifeExpectancyFull_log,which=1)
+```
+
+The graph above shows that the log transformation has successfully
+improved the model as the residuals are now closer the horizontal line. However, we still some funneling in the data as the Residuals are more spread out in the lower range of the Fitted Values, and more concentrated at the higher end of the Fitted Values. The p-value has also not changed as it is still much less than the significance level of $\alpha = 0.05$ which indicates that there is still homoscedasticity. 
+
+In an attempt to improve the p-value, we wil use a Box-Cox transformation to see if it will help our data satisfy the homoscedasticity assumption. Before we attempt the Box-Cox transformation, we must first find the best lambda.
+
+Figure 8: Box-Cox Transformation of the Data. This shows the range of where the best lambda may lie.
+```{r echo=FALSE}
+library(MASS)
+bc=boxcox(LifeExpectancyFull_old, lambda = seq(-5,5))
+```
+
+To understand, where exactly our best lambda resides, we extract it from the Box-Cox transformation above:
+```{r}
+bestlambda=bc$x[which(bc$y==max(bc$y))]
+bestlambda
+```
+
+Based on our analysis, we received a best lambda of 1.262626 which we will use in a new model to test homoscedasticity.
+
+```{r}
+LifeExpectancyFull_trans=lm((((Life_expectancy^1.262626)-1)/1.262626)~factor(Country) + factor(Region) +Year + Infant_deaths + Under_five_deaths + Adult_mortality + Alcohol_consumption + Hepatitis_B + Measles + BMI + Polio + Diphtheria + Incidents_HIV + GDP_per_capita + Population_mln +Thinness_ten_nineteen_years + Thinness_five_nine_years + Schooling + Economy_status_Developed, data = Life_Expectancy_data)
+summary(LifeExpectancyFull_trans)
+```
+
+```{r}
+## testing for homoscedacity
+bptest(LifeExpectancyFull_trans)
+```
+
+After conducting another Breusch-Pagan Test to confirm homoscedasticity in our new model with the best lambda,the test statistic (BP = 1172.7) and a very small p-value (p-value \<2.2e-16) indicates that we reject the null hypothesis. This
+confirms that heteroscedasticity is still present even after the Box-Cox transformation.
+
+Then we plot to see the residuals vs fitted of the transformed Box-Cox
+model:
+
+Figure 9: Residuals vs. Fitted Plot of the Box-Cox Transformed model
+```{r}
+plot(LifeExpectancyFull_trans,which=1)
+```
+
+The Box-Cox transformation has slightly improved the residual spread as it is more evenly spread out along the horizontal line but
+did not fully resolve heteroscedasticity as the p-value is still much lower than the significance level. This suggests that the variance of the errors in our final model may increase with the value of the response variable, Life_expectancy.
+
+### 3.2.4 Normality Assumption
+
+The normality assumption ensures that residuals follow a normal
+distribution, which is crucial for valid statistical inferences like
+p-values and confidence intervals in regression. Both a histogram and a
+Q-Q plot are used to assess this assumption. The histogram shows the
+overall residual distribution, while the Q-Q plot highlights deviations
+from normality, such as skewness or heavy tails. Together, they provide
+a thorough evaluation of residual normality, ensuring the model's
+reliability.
+
+**Hypothesis:**
+
+$H_{0}$: the sample data is significantly normally distributed
+
+$H_{a}$: the sample data is not significantly normally distributed
+
+Figure 10: Histogram of Residuals vs. Fitted for Normality Assumption  
+
+```{r}
+# Histogram of Residuals vs. Fitted
+ggplot(data=Life_Expectancy_data, aes(residuals(LifeExpectancyFull_old))) +
+  geom_histogram(breaks = seq(-1,1,by=0.1), col="green3", fill="green4") +
+  labs(title="Histogram for residuals") +
+  labs(x="residuals", y="Count")
+```
+
+The histogram of residuals is approximately symmetric and shows a
+bell-shaped distribution. However, the tails appear slightly heavy,
+which could indicate deviations from perfect normality.
+
+Figure 11: Q-Q plot of the Residuals vs. Fitted for Normality Assumption
+
+```{r}
+#Normal QQ plot
+library(ggplot2)
+ggplot(Life_Expectancy_data, aes(sample=LifeExpectancyFull_old$residuals)) +
+  stat_qq() +
+  stat_qq_line()
+```
+
+The Q-Q plot reveals deviations from the straight line, particularly in
+the tails. This indicates that the residuals do not perfectly follow a
+normal distribution and may have heavier tails than expected.
+
+We will conduct a formal test for normality using a Shapiro Test and report the p-value.
+
+```{r}
+#Testing for normality 
+shapiro.test(residuals(LifeExpectancyFull_old))
+```
+
+The test shows a very small p-value (p-value \< 2.2e-16) which is less than the significance level $\alpha = 0.05$. Therefore, we reject the null hypothesis, indicating that it does not satisfy the requirement of normality.
+
+We will again do the Shapiro Test, but this time for the log-transformed model and the Box-Cox model
+
+```{r}
+## Testing normality (log transformation)
+shapiro.test(residuals(LifeExpectancyFull_log))
+```
+
+```{r}
+## Testing normality (Box-Cox Transformation)
+shapiro.test(residuals(LifeExpectancyFull_trans))
+```
+
+The test for log-transformed model shows avery small p-value (p-value \<
+2.2e-16) which is less than the significance level $\alpha = 0.05$. Therefore, we reject the null hypothesis, indicating that the log-transformed model also does not satisfy the requirement of normality.
+
+Similarly, the test for Box-Cox model shows a a very small p-value (p-value \<
+2.2e-16) which is less than the significance level $\alpha = 0.05$. Again we reject the null hypothesis, indicating that it does not satisfy the requirement of normality.
+
+Overall, we reject the null hypothesis for all of the transformed models regarding normality assumption. This means that the residuals errors of the model do not follow a significantly normally distribution. This suggests that there may be a few data points on one or both ends of the model that deviate from the reference line significantly, which can be considered as outliers. Therefore, we should pay closer attention to it.
+
+We will move on to multicollinearity to identify which variables are affected by multicollinearity and the strength of the correlation.
+
+### 3.2.5 Multicollinearity
+
+Two or more independent variables used in the model usually provide redundant information as the independent variables will be correlated with each other. From our data set, we suspected the variables 'Country','Region' and 'Economy_status_Developed' are correlated with each other and one or more of them are redundant as they all represent region information. When independent variables are linearly correlated, there is multicollinearity exists. We will first test the linearity of the three
+variables.
+
+Figure 12: Multicollinearity Test between Independent Variables (Country, Region, Economy_status_Developed)
+
+```{r}
+library(mctest) 
+pairs(~ factor(Country) +factor(Region) + factor(Economy_status_Developed), data=Life_Expectancy_data)
+```
+
+The scatter plot shows multicollinearity between the three variables. If
+the points in the scatter plots align vertically or horizontally, it
+suggests that one variable can be predicted by another and indicates
+multicollinearity. Based on this, the points in those scatter plots are
+either aligned vertically or horizontally, which shows clustering.
+Therefore, we conclude that there is potential multicollinearity
+between Country and Region, Country and Economy_status_Developed, and
+Region and Economy_status_Developed.
+
+We will conduct a Variance Inflation Factor (VIF) test to confirm:
+
+```{r echo=FALSE}
+#VIFmodel= lm(Life_expectancy ~ factor(Country) +factor(Region) + factor(Economy_status_Developed),data=Life_Expectancy_data)
+#imcdiag(VIFmodel, method="VIF")
+```
+
+A value of VIF = 1 indicates that there is no collinearity between the independent variable and others. A VIF value between 1 and 5 suggests moderate collinearity, and a VIF value of above 5 represents critical level of multicollinearity where the coefficients are poorly estimated, and the p-values are questionable. As the value of VIF are all above 5 for three variables, this suggest that there are critical levels of multicollinearity in the data. In order to resolve multicollinearity, we will drop 2 out of these 3 variables, and keep only the most relevant one to our research study. Since our research question specifically focuses on evaluating life expectancy between developed and developing economies, we decide to drop 'Country' and 'Region' and keep 'Economy_status_Developed' only, to avoid redundancy.
+
+Therefore we will revise the full model and remove the redundant variables (Country and Region) that we have confirmed have high multicollinearity in the previous steps.
+
+The revised full model is shown below:
+```{r echo=FALSE}
+Life_Expectancy_data$Economy_status_Developed[which(Life_Expectancy_data$Economy_status_Developed==1)] = "Developed"
+Life_Expectancy_data$Economy_status_Developed[which(Life_Expectancy_data$Economy_status_Developed==0)] = "Developing"
+
+LifeExpectancyFull = lm(Life_expectancy ~ Year + Infant_deaths + Under_five_deaths + Adult_mortality + Alcohol_consumption +	Hepatitis_B	+ Measles	+ BMI	+ Polio	+ Diphtheria + Incidents_HIV + GDP_per_capita + Population_mln + Thinness_ten_nineteen_years + 	Thinness_five_nine_years + Schooling + Economy_status_Developed, data = Life_Expectancy_data)
+
+options(max.print = 10000)
+summary(LifeExpectancyFull)
+```
+
+### 3.2.6 Outliers
+
+In this step we are identifying outliers in the Life_expectancy_data.
+This step is to ensure the outliers will not affect the model:
+
+1.  Error in recording data\
+2.  Measurement process/tool problem\
+3.  failure of the experimental process\
+
+We will use the Residuals vs Leverage plot to help us find influential
+cases, if any. Outliers that reside within Cook's Distance, meaning the upper right corner or lower right corner of the plot, require special attention is these points can have influence against the regression line.
+
+Figure 13: Residuals vs Leverage Plot of the Revised Full Model
+
+```{r}
+plot(LifeExpectancyFull,which=5)
+```
+
+The graph shows a few points with higher leverage, but none of the
+observations exceeds the Cook's Distance threshold, and no
+values appear in the upper and lower corner. This suggests that there are no
+extremely influential outliers that would distort the model excessively.
+
+We will further conduct a Cook's Distance formal test to measure the
+overall influence an outlying observation has on the estimated
+coefficients. The value that exceeds 0.5 will be considered "too large" and
+could influence the accuracy of our analysis.
+
+```{r}
+Life_Expectancy_data[cooks.distance(LifeExpectancyFull)>0.5,]
+```
+The Cook's Distance Test did not a show any data points that could possibly influence our model. We will plot the Cook's Distance to observe the behavior of our data points.
+
+Figure 14: Cook's Distance plot to identify outliers in the model.
+
+```{r}
+plot(LifeExpectancyFull,pch=18,col="red",which=c(4))
+```
+
+The plot shows that observations with the highest Cook's distances are well below 0.5.
+This means that while some observations have higher leverage, therefore, they do not pose a substantial risk to model validity.
+
+
+Based on the outlier analysis using the Residuals vs Leverage
+plot, and the Cook’s Distance plot, we can conclude that there are no significant outliers or influential points that exceed
+the commonly accepted thresholds. While a few observations have higher leverage values, they do not pose a substantial risk to the model’s validity. Therefore, we consider further processing is not require at this stage.
+
+In summary, our data has passed the Linearity Assumption, Independence Assumption, and the test for outliers. We have also handled multicollinearity among our variables by dropping Region and Country from the model. Unfortunately, we did not pass the Equal Variance and Normality assumptions. This indicates that when we report our final model, it should be interpreted with careful consideration as the analysis may not be reliable due to the presence of errors.
+
+## 3.3 Additive Modeling
+
+### Full Model Test 
+
+After conducting the assumptions tests, we consider our revised
+full model (without Country or Region) as a valid model to proceed to the next steps. 
+
+As we have many variables in our model, we want to limit it for our study and determine if the following variables
+are significant predictors of the response variable Life_expectancy:
+
+-   Adult Mortality
+-   Alcohol Consumption
+-   Hepatitis B
+-   HIV Incidents
+-   Population (millions)
+-   Thinness in children 10-19 years
+-   GDP per capita
+-   Schooling
+-   Economy Status
+
+We will first check to see if any of the variation in the dependent variable is explained by at least one of the independent variables mentioned above by performing a Full Model Test using ANOVA.
+ 
+$H_0: \beta_i=0$ $\forall i$
+ 
+$H_a:\beta_i \ne 0$ for at least one i
+ 
+$\alpha = 0.05$
+ 
+ 
+```{r}
+additiveFullModel_LifeExpectancy <- lm(Life_expectancy~Adult_mortality +Alcohol_consumption + Hepatitis_B + Incidents_HIV + GDP_per_capita + Population_mln +Thinness_ten_nineteen_years + Schooling + factor(Economy_status_Developed),data=Life_Expectancy_data)
+options(scipen=999)
+summary(additiveFullModel_LifeExpectancy)
+
+nullmodel = lm(Life_expectancy ~ 1, data=Life_Expectancy_data)
+ 
+anova(nullmodel, additiveFullModel_LifeExpectancy)
+```
+
+The significance level we agreed on is 0.05 when analyzing the p-value
+of the variables. According to the output, the overall significance
+F-statistic is *6670* and the p-value is *2.2e-16*, which is
+smaller than $\alpha=0.05$, so we reject the null hypothesis and we have
+evidence to conclude that at least one of the independent
+variables is not equal to 0. In summary the large F stat and small p-value
+suggests that at least one of the variables must be related to the
+response variable life expectancy.
+
+The full model equation is as follows:
+
+$\hat{LifeExpectancy} =  75.02215 -0.07098_{AdultMortality} + 0.13857_{AlcholConsumption} + 0.02898_{HepatitisB} + 0.39484_{IncidentsHIV} + 0.000007_{GDP} + 0.00007_{Population} - 0.02064_{Thinness} + 0.53486_{Schooling} - 0.06879_{EconomyStatus}$
+
+### Partial Model Test
+
+We will use individual t-tests to determine if the independent variables are significant at $\alpha = 0.05$.
+
+Our hypothesis is:
+
+$H_0: \beta_k=0$ 
+ 
+$H_a:\beta_k \ne 0$ 
+
+According to the summary of the revised full model, the p-value for
+Population_mln is 0.8196, Thinness_ten_nineteen_years is 0.0605, and
+factor(Economy_Status_Developed) is 0.6538, which are all greater than
+$\alpha = 0.05$. These are considered not significant in the full
+model at $\alpha = 0.05$ level. Therefore, we fail to reject the null hypothesis and conclude that Population_mln, Thinness_ten_nineteen_years, and factor(Economy_Status_Developed) have no significant impact on Life_Expectancy at $\alpha=0.05$.
+
+The following is our reduced model:
+```{r}
+additivemodel1_LifeExpectancy <- lm(Life_expectancy~Adult_mortality +Alcohol_consumption + Hepatitis_B + Incidents_HIV + GDP_per_capita + Schooling,data=Life_Expectancy_data)
+summary(additivemodel1_LifeExpectancy)
+```
+
+The reduced model is as follows: 
+
+$\hat{Life Expectancy} = 74.75634 - 0.07104X_{AdultMortality} + 0.14547X_{AlcoholConsumption} + 0.02887X_{HepatitisB} + 0.39194X_{IncidentsHIV} +  0.000008_{GDP} +  0.54730{Schooling}$
+
+According to the output of the reduced model, the overall significance
+F-statistic is *10000* and the p-value is *2.2e-16*, which is smaller
+than $\alpha=0.05$. The adjusted R-squared of the
+reduced model is 0.9545.
+
+The p-values of all the independent variables in the reduced model are less than 0.05, which suggests that they are all statistically significant and that there are no variables to remove from the model using the t-test. 
+
+### Partial F-test
+
+To determine whether the reduced additive model is a better fit than the
+full additive model, we will perform a Partial F-test using the ANOVA
+function in R with the significance level as $\alpha=0.05$
+
+Our hypothesis for the Partial F test is:
+
+$H_0: \beta_{p-q+1} = \beta_{p} = 0$, where $p$ represents the variables to be dropped (Thinness, population, Economy_Status_Developed) \
+$H_a:$ at least one $\beta_i \ne 0$
+
+```{r}
+anova(additivemodel1_LifeExpectancy,additiveFullModel_LifeExpectancy)
+```
+
+Based on the ANOVA test, the p-value of the reduced model is 0.2749. Since it is larger than
+$\alpha=0.05$, we fail to reject the null hypothesis which means that we should drop the variables Population, Thinness, and Economy_status_Developed from the full model. Therefore, we accept the reduced additive model as our final additive model.
+
+The final additive model is represented by:
+
+$\hat{Life Expectancy} = 74.75634 - 0.07104X_{AdultMortality} + 0.14547X_{AlcoholConsumption} + 0.02887X_{HepatitisB} + 0.39194X_{IncidentsHIV} +  0.000008_{GDP} +  0.54730{Schooling}$
+
+### Stepwise Regression Procedure
+
+We will apply the Stepwise Regression Procedure with p_enter=0.05 and
+p_remove=0.1 to the data to find the independent variables most suitable
+for modeling life expectancy. Previously we used individual t-tests to
+determine which variables to remove from the full model. We will apply
+the Stepwise Regression Procedure to see if we will yield similar
+results.
+
+Hypothesis:
+
+H0: all $\beta_{i}$ = 0 (None of the variables are significant)
+
+Ha: At least one of the $\beta$ is not equal to 0 (At least one of the
+variables is significant)
+
+Stepwise Regression Procedure:
+
+```{r}
+stepreg_LifeExpectancy <- lm(Life_expectancy~Adult_mortality +Alcohol_consumption + Hepatitis_B + Incidents_HIV + GDP_per_capita + Population_mln +Thinness_ten_nineteen_years + Schooling + Economy_status_Developed,data=Life_Expectancy_data)
+LifeExpectancy_stepwise <- ols_step_both_p(stepreg_LifeExpectancy, p_enter=0.05, p_remove=0.1, details=FALSE)
+summary(LifeExpectancy_stepwise$model)
+```
+
+Given the parameters p_enter=0.05 and p_remove=0.1, the variables whose
+p-values are less than 0.05 are:\
+- Adult_mortality\
+- Schooling\
+- Incidents_HIV\
+- Alcohol_consumption\
+- Hepatitis_B\
+- GDP_per_capita
+
+Therefore, these 6 variables are what we will include in the final Stepwise Regression model. The p-value for the stepwise model is
+\<2.2e-16 and the Adjusted R-squared is 0.9545.
+
+The equation of the step wise model is as follows: $\hat{Life Expectancy} = 74.7563 - 0.07104X_{AdultMortality} + 0.1455X_{AlcoholConsumption} + 0.0289X_{HepatitisB} + 0.3919X_{IncidentsHIV} +  0.000008_{GDP} +  0.5473{Schooling}$
+
+Similarly, we will also perform a Forward Regression model to see how it compares to the Stepwise Regression model and the individual t-tests we
+performed.    
+
+
+### Forward Regression Procedure:
+
+Hypothesis:
+
+H0: all $\beta_{i}$ = 0 (None of the variables are significant)
+
+Ha: At least one of the $\beta$ is not equal to 0 (At least one of the
+variables is significant)
+```{r}
+forward_additivemodel <- lm(Life_expectancy~Adult_mortality +Alcohol_consumption + Hepatitis_B + Incidents_HIV + GDP_per_capita + Population_mln +Thinness_ten_nineteen_years + Schooling + Economy_status_Developed,data=Life_Expectancy_data)
+LifeExpectancy_forward <- ols_step_forward_p(forward_additivemodel ,p_val=0.05,  details=FALSE)
+summary(LifeExpectancy_forward$model)
+```
+
+Given the parameters p_enter=0.05, the variables whose p-values are less than 0.05 are: \
+
+- Adult_mortality\
+- Schooling\
+- Incidents_HIV\
+- Alcohol_consumption\
+- Hepatitis_B\
+- GDP_per_capita
+
+Therefore, these 6 variables are what we will include in the final forward Regression model. The p-value for the forward model is
+<2.2e-16 and the Adjusted R-squared is 0.9545.
+
+The equation of the forward regression model is as follows: $\hat{Life Expectancy} = 74.7563 - 0.07104X_{AdultMortality} + 0.1455X_{AlcoholConsumption} + 0.0289X_{HepatitisB} + 0.3919X_{IncidentsHIV} +  0.000008_{GDP} +  0.5473{Schooling}$
+
+
+### Backward Regression Procedure:
+
+Hypothesis:
+
+H0: all $\beta_{i}$ = 0 (None of the variables are significant)
+
+Ha: At least one of the $\beta$ is not equal to 0 (At least one of the
+variables is significant)
+
+```{r}
+backward_additivemodel <- lm(Life_expectancy~Adult_mortality +Alcohol_consumption + Hepatitis_B + Incidents_HIV + GDP_per_capita + Population_mln +Thinness_ten_nineteen_years + Schooling + Economy_status_Developed,data=Life_Expectancy_data)
+LifeExpectancy_backward <- ols_step_backward_p(backward_additivemodel ,p_val=0.05,  details=FALSE)
+summary(LifeExpectancy_backward$model)
+```
+
+Given the parameters p_enter=0.05, the variables whose p-values are less than 0.05 are:\ 
+
+- Adult_mortality\
+- Schooling\
+- Incidents_HIV\
+- Alcohol_consumption\
+- Hepatitis_B\
+- GDP_per_capita
+
+Therefore, these 6 variables are what we will include in the final backward Regression model. The p-value for the forward model is
+<2.2e-16 and the Adjusted R-squared is 0.9545.
+
+The equation of the backward regression model is as follows: $\hat{Life Expectancy} = 74.7563 - 0.07104X_{AdultMortality} + 0.1455X_{AlcoholConsumption} + 0.0289X_{HepatitisB} + 0.3919X_{IncidentsHIV} +  0.000008_{GDP} +  0.5473{Schooling}$
+
+
+#Compare R-Squared of T-test/Stepwise/Forward/Backward
+
+```{r}
+data.frame(Model = c( "T-test Model", "Stepwise/Backward/Forward Regression Model"),AdjRsq =c(summary(additivemodel1_LifeExpectancy)$adj.r.squared,summary(LifeExpectancy_stepwise$model)$adj.r.squared),RSE=c(summary(additivemodel1_LifeExpectancy)$sigma,summary(LifeExpectancy_stepwise$model)$sigma))
+```
+
+
+
+## 3.4 Interaction Model
+
+We want to understand if the reduced model will perform better with
+interactions. First we will add interaction to all *6* variables from the final additive model:
+
+```{r}
+intx_Life_Expectancy <- lm(Life_expectancy~(Adult_mortality + Alcohol_consumption +	Hepatitis_B	+ Incidents_HIV + GDP_per_capita + Schooling)^2, data=Life_Expectancy_data)
+summary(intx_Life_Expectancy)
+options(scipen=999)
+```
+
+We will use individual t-tests for each predictor and interaction terms to determine which ones are significant at $\alpha = 0.05$. 
+
+$H_0: \beta_i=0$ 
+ 
+$H_a:\beta_i \ne 0$ $(i = 1,2,...,p)$
+
+Where $p$ is the number of independent variables and interaction terms in the regression model.
+
+From the above output we observe that the predictors and interaction terms that have a p-value smaller than  $\alpha = 0.05$ are the following:
+
+- Adult_mortality                    
+- Alcohol_consumption
+- Hepatitis_B                        
+- Incidents_HIV                      
+- GDP_per_capita                     
+- Schooling                          
+- Adult_mortality:Alcohol_consumption
+- Adult_mortality:Hepatitis_B        
+- Adult_mortality:Schooling          
+- Adult_mortality:Incidents_HIV      
+- Alcohol_consumption:GDP_per_capita 
+- Alcohol_consumption:Schooling      
+- Alcohol_consumption:Hepatitis_B    
+- Hepatitis_B:GDP_per_capita         
+- Hepatitis_B:Schooling              
+- Incidents_HIV:Schooling            
+
+For the above terms we reject the null hypothesis, and conclude that they are statistically significant and should be kept in the model.
+
+
+Alternatively, the interaction terms Adult_mortality:GDP_per_capita, Hepatitis_B:Incidents_HIV, Incidents_HIV:GDP_per_capita and GDP_per_capita:Schooling all have a p-value which is greater than $\alpha=0.05$. Hence, we fail to reject the null hypothesis for these terms, which means that these terms are statistically insignificant. As a result we will remove these terms from the model.
+
+Removing the insignificant interactions the reduced interaction model is as follows:
+
+```{r}
+reducedInteractionModel1 = lm(Life_expectancy~Adult_mortality + Alcohol_consumption +  Hepatitis_B + Incidents_HIV + GDP_per_capita + Schooling + Adult_mortality*Alcohol_consumption + Adult_mortality*Hepatitis_B + Adult_mortality*Schooling + Adult_mortality*Incidents_HIV + Alcohol_consumption*GDP_per_capita + Alcohol_consumption*Schooling + Alcohol_consumption*Hepatitis_B + Hepatitis_B*GDP_per_capita + Hepatitis_B*Schooling + Incidents_HIV*Schooling, data=Life_Expectancy_data)
+
+summary(reducedInteractionModel1)
+```
+
+Based on the reduced interaction model, all interaction terms are below
+the significance level of $\alpha=0.05$. The adjusted R-squared of the
+reduced interaction model is 0.9627, which is the same as the full
+model. 
+
+Reduced interaction model:
+
+$\hat{Life Expectancy} = 69.00181 - 0.05828X_{AdultMortality} + 0.33410X_{AlcoholConsumption} + 0.11812X_{HepatitisB} - 1.13334X_{IncidentsHIV} + 0.00022_{GDP} + 0.57281{Schooling} - 0.00146X_{AdultMortality}X_{AlcoholConsumption} - 0.00021X_{AdultMortality}X_{HepatitisB} + 0.00189X{AdultMortality}X_{Schooling} + 0.00206X{AdultMortality}X_{IncidentsHIV} - 0.000004X_{AlcoholConsumption}X_{GDP} - 0.00890X_{AlcoholConsumption}X_{Schooling} + 0.00256X{AlcoholConsumption}X_{Hepatitis_B} - 0.000002X{HepatitisB}X_{GDP} - 0.00571X{HepatitisB}X_{Schooling}  + 0.06637X_{IncidentsHIV}X_{Schooling}$
+
+In addition to the individual t-tests we will conduct a Partial F-test to see which model to
+accept - reduced interaction model vs full interaction model. First, we state our
+hypothesis:
+
+$H_0: \beta_{p-q+1} = \beta_{p} = 0$, where $q$ represents the subsets of dropped (Adult_mortality:GDP_per_capita, Hepatitis_B:Incidents_HIV, Incidents_HIV:GDP_per_capita and GDP_per_capita:Schooling)
+$H_a:$ at least one $\beta_i \ne 0$
+
+
+```{r}
+#Partial F-test
+anova(reducedInteractionModel1,intx_Life_Expectancy)
+```
+
+When comparing the reduced model and the full interaction model, we
+receive a p-value of 0.1283 which is greater than the significance level of 0.05. Therefore we drop the insignificant terms and accept the reduced model.
+
+Therefore, our final interaction model is:
+
+$\hat{Life Expectancy} = 69.00180 - 0.05828X_{AdultMortality} + 0.33409X_{AlcoholConsumption} + 0.11811X_{HepatitisB} - 1.13339X_{IncidentsHIV} + 0.000217_{GDP} + 0.57281{Schooling} - 0.001455X_{AdultMortality}X_{AlcoholConsumption} - 0.000213X_{AdultMortality}X_{HepatitisB} + 0.001891X{AdultMortality}X_{Schooling} + 0.00206X{AdultMortality}X_{IncidentsHIV} - 0.000003X_{AlcoholConsumption}X_{GDP} - 0.00889X_{AlcoholConsumption}X_{Schooling} + 0.002555X{AlcoholConsumption}X_{Hepatitis_B} - 0.0000018X{HepatitisB}X_{GDP} - 0.00571X{HepatitisB}X_{Schooling}  + 0.06636X_{IncidentsHIV}X_{Schooling}$
+
+## Higher Order Analysis
+
+To see if we can make any further improvements to our model, we will
+determine if any higher order terms should be included. We will do a higher
+order analysis for each of our 6 variables in the reduced interactive
+model. If We identify any variables fit for higher order analysis the maximum degree we will utilize is four to avoid over fitting the model. 
+
+We start by visualizing the data to see how the response variable looks with respect to each independent variable.
+
+Figure 15: pair plots of 
+
+```{r}
+pairs(~Life_expectancy + Adult_mortality + Alcohol_consumption + Hepatitis_B + Incidents_HIV + GDP_per_capita+ Schooling,data=Life_Expectancy_data,panel = panel.smooth)
+```
+```{r}
+gdp_quadratic_model = lm(Life_expectancy~Adult_mortality + Alcohol_consumption + Hepatitis_B + Incidents_HIV + GDP_per_capita + I(GDP_per_capita^2) + Schooling + Adult_mortality*Alcohol_consumption + Adult_mortality*Hepatitis_B + Adult_mortality*Schooling + Adult_mortality*Incidents_HIV + Alcohol_consumption*GDP_per_capita + Alcohol_consumption*Schooling + Alcohol_consumption*Hepatitis_B + Hepatitis_B*GDP_per_capita + Hepatitis_B*Schooling + Incidents_HIV*Schooling, data=Life_Expectancy_data)
+summary(gdp_quadratic_model)
+```
+
+```{r}
+gdp_model3 = lm(Life_expectancy~Adult_mortality + Alcohol_consumption + Hepatitis_B + Incidents_HIV + GDP_per_capita + I(GDP_per_capita^2) + I(GDP_per_capita^3) + Schooling + Adult_mortality*Alcohol_consumption + Adult_mortality*Hepatitis_B + Adult_mortality*Schooling + Adult_mortality*Incidents_HIV + Alcohol_consumption*GDP_per_capita + Alcohol_consumption*Schooling + Alcohol_consumption*Hepatitis_B + Hepatitis_B*GDP_per_capita + Hepatitis_B*Schooling + Incidents_HIV*Schooling, data=Life_Expectancy_data)
+summary(gdp_model3)
+```
+
+```{r}
+gdp_model4 = lm(Life_expectancy~Adult_mortality + Alcohol_consumption +  Hepatitis_B + Incidents_HIV + GDP_per_capita + I(GDP_per_capita^2) + I(GDP_per_capita^3) + I(GDP_per_capita^4) + Schooling + Adult_mortality*Alcohol_consumption + Adult_mortality*Hepatitis_B + Adult_mortality*Schooling + Adult_mortality*Incidents_HIV + Alcohol_consumption*GDP_per_capita + Alcohol_consumption*Schooling + Alcohol_consumption*Hepatitis_B + Hepatitis_B*GDP_per_capita + Hepatitis_B*Schooling + Incidents_HIV*Schooling, data=Life_Expectancy_data)
+summary(gdp_model4)
+```
+We stop at the quartic to void overfitting the model. From the output we observe the best model is the degree 4 model based on the significance of the terms, $R^2_{adj}$ and RSE. Hence, our final higher order model to fit the data is of degree 4.
+
+$\hat{Life Expectancy} = 69.01973 - 0.059X_{AdultMortality} + 0.23379X_{AlcoholConsumption} + 0.10691X_{HepatitisB} - 1.22565X_{IncidentsHIV} +  0.00038X_{GDP} +  -0.000000008X_{GDP}^2 +  0.0000000000001X_{GDP}^3 - 0.0000000000000000006X_{GDP}^4 + 0.65913X_{Schooling}  - -0.00127X_{AdultMortality}X_{AlcoholConsumption} - 0.00016X_{AdultMortality}X_{HepatitisB} +  0.00161X{AdultMortality}X_{Schooling} + 0.00212X{AdultMortality}X_{IncidentsHIV} - 0.000002X_{AlcoholConsumption}X_{GDP} - 0.00946X_{AlcoholConsumption}X_{Schooling} + 0.00272X{AlcoholConsumption}X_{Hepatitis_B} - 0.000002X{HepatitisB}X_{GDP} - 0.00632X{HepatitisB}X_{Schooling}  + 0.06593X_{IncidentsHIV}X_{Schooling}$
+
+
+
+### Interpretation of Betas in the Final Model
+
+The effect of EXH.TEMP is 23.27-0.041AIRFLOW, means that for a given amount of INLET.TEMP and RPM (are held constant), an increase of 1 degree Celsius of the exhaust gas temperature leads to an increase in the heat rate by 23.27-0.041AIRFLOW revolutions per minute.
+
+$\beta_0$: Baseline Life-Expectancy when all the variables 0 is  65.92257
+
+The effect of Adult_Mortality is - 0.05439- 0.00088X_{AlcoholConsumption}+0.00012X_{HepatitisB}+ 0.00216X_{Incidents_HIV}, means that for when other variables are held constant, an increase of 1 year of adult mortality leads to change in life expectancy by - 0.05439- 0.00088X_{AlcoholConsumption}+0.00012X_{HepatitisB}+ 0.00216X_{Incidents_HIV} years.
+
+The effect of Schooling is 2.3868314548 - 0.17962X_{Schooling}^2 + 0.00525X_{Schooling}^3
+
+# 4 Conclusion and Discussion
+
+## 4.1 Approach
+
+The focus of our research study is to determine which variables have a statistically significant impact in predicting the response variable, "Life_expectancy". Using the Life_Expectancy data set from the Kaggle website, we performed multiple linear regression modelling to arrive at the best model in predicting our response variable which is: XXX.
+
+Overall, using an alpha of $\alpha = 0.05$ and Adjusted R-Squared as the primary criterion, we arrived at the optimal model through various statistical tests such as t-tests, full and partial F-tests, automated model selection, testing for interaction terms, and testing for higher order terms. This approach ensured that we used formal p-value tests to assess significant variables an interaction terms when selecting the best model
+
+However, it should be noted that the final model did not pass all assumption tests, namely homoscedasticity and normality. Therefore, the final model may not entirely be reliable for predicting life expectancy due to the high presence of residual errors.
+
+## 4.2 Future Work
+
+In the future, it would be best if the data set of the research study fulfilled all assumptions tests. This way, the final model and its interpretations becomes more reliable and impactful, especially because the purpose of the study could potentially impact government policies and direction. Additionally, our study limited the variables when we created the additive model. If given more time for research, perhaps the model would be more informative had we included all variables. For example, we had attempted to perform an "all possible regressions" selection procedure, however due to the large number of variables, it was computationally demanding and time-consuming for our research.
+
+In terms of the data set, the data was an aggregate of multiple individual data sets. Another improvement that could be made would be the approach in the collection of the data; it would be better if the data set itself had a clear objective and didn't involve taking information from different sources. The data set was also a compilation of information collected between year 2000-2015. We believe it may be more impactful for our study if the data was limited to the last 5-10 years.
+
+## 4.3 Conclusion
+
+In conclusion, based on our research study, the variables that impact life expectancy include: Adult Mortality, Alcohol Consumption, Hepatitis B, GDP, HIV Incidents, and Schooling. These variables represent different characteristics of a person and the society they live in, indicating that a mix of socio-economic factors like an economy's GDP and the schooling available have an impact on life expectancy. Additionally, health factors like immunization from Hepatitis B and HIV can be beneficial to predicting life expectancy. Lastly, lifestyle factors like alcohol consumption and the adult death rates are also significant predictors of life expectancy. The interaction of these variables are also statistically significant, indicating that having well-balanced socio-economic surroundings and a healthy lifestyle can potentially extend life expectancy. From the perspective of governments, promoting life expectancy through these factors can help creating a healthier and more productive society. On a more personal level, understanding the relationship of the economy, health, and other lifestyle factors can also help individuals live a more satisfying and fulfilling life.
+
+# Appendix
+
+##References
+
+Life Expectancy (WHO) Fixed. (2022). Www.kaggle.com. https://www.kaggle.com/datasets/lashagoch/life-expectancy-who-updated 
